@@ -363,7 +363,7 @@ Health check endpoints:
 ### SuperTokens won't start
 - Ensure MySQL is healthy before SuperTokens starts
 - Check database credentials in `.env`
-- Verify `config.yaml` syntax
+- Verify environment variables are properly set in docker-compose.yml
 
 ### OAuth not working
 - Verify redirect URIs match exactly in provider settings
