@@ -276,11 +276,12 @@ supertokens.init({
                                 keyId: process.env.APPLE_KEY_ID,
                                 teamId: process.env.APPLE_TEAM_ID,
                                 privateKey: (() => {
+                                    const keyPath = process.env.APPLE_PRIVATE_KEY_PATH;
                                     try {
-                                        return require('fs').readFileSync(process.env.APPLE_PRIVATE_KEY_PATH, 'utf8');
+                                        return require('fs').readFileSync(keyPath, 'utf8');
                                     } catch (error) {
-                                        console.error('Failed to read Apple private key:', error.message);
-                                        throw new Error('Apple private key not found. Please check APPLE_PRIVATE_KEY_PATH');
+                                        console.error(`Failed to read Apple private key from ${keyPath}:`, error.message);
+                                        throw new Error(`Apple private key not found at ${keyPath}. Please check APPLE_PRIVATE_KEY_PATH`);
                                     }
                                 })(),
                             },
