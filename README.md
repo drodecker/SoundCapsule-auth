@@ -129,13 +129,15 @@ Copy `.env.example` to `.env` and configure the following:
 APPLE_CLIENT_ID=your.apple.service.id
 APPLE_KEY_ID=ABC123XYZ
 APPLE_TEAM_ID=DEF456UVW
-APPLE_PRIVATE_KEY_PATH=/path/to/AuthKey_ABC123XYZ.p8
+APPLE_PRIVATE_KEY_PATH=./secrets/AuthKey_ABC123XYZ.p8
 ```
 
 **Important Notes:**
 - Keep your private key (.p8 file) secure
 - Never commit the private key to version control
 - The private key can only be downloaded once
+- Store the key in a `secrets/` directory (already in .gitignore)
+- Ensure the key file is readable by your application
 
 ### Facebook OAuth Setup
 
@@ -273,7 +275,14 @@ supertokens.init({
                             additionalConfig: {
                                 keyId: process.env.APPLE_KEY_ID,
                                 teamId: process.env.APPLE_TEAM_ID,
-                                privateKey: require('fs').readFileSync(process.env.APPLE_PRIVATE_KEY_PATH, 'utf8'),
+                                privateKey: (() => {
+                                    try {
+                                        return require('fs').readFileSync(process.env.APPLE_PRIVATE_KEY_PATH, 'utf8');
+                                    } catch (error) {
+                                        console.error('Failed to read Apple private key:', error.message);
+                                        throw new Error('Apple private key not found. Please check APPLE_PRIVATE_KEY_PATH');
+                                    }
+                                })(),
                             },
                         }],
                     },

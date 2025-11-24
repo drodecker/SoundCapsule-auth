@@ -1,6 +1,9 @@
 # Environment variables
 .env
 
+# Secrets directory (Apple keys, etc.)
+secrets/
+
 # Docker volumes
 mysql_data/
 
