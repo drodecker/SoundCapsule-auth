@@ -1,0 +1,76 @@
+version: '3.8'
+
+services:
+  mysql:
+    image: mysql:8.0
+    container_name: soundcapsule-mysql
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MYSQL_DATABASE: ${MYSQL_DATABASE}
+      MYSQL_USER: ${MYSQL_USER}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+    networks:
+      - supertokens_network
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p${MYSQL_ROOT_PASSWORD}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  supertokens:
+    image: registry.supertokens.io/supertokens/supertokens-mysql:latest
+    container_name: soundcapsule-supertokens
+    restart: unless-stopped
+    depends_on:
+      mysql:
+        condition: service_healthy
+    ports:
+      - "4001:3567"
+    environment:
+      MYSQL_CONNECTION_URI: mysql://${MYSQL_USER}:${MYSQL_PASSWORD}@mysql:3306/${MYSQL_DATABASE}
+      API_KEYS: ${SUPERTOKENS_API_KEYS}
+    volumes:
+      - ./config.yaml:/usr/lib/supertokens/config.yaml
+    networks:
+      - supertokens_network
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.supertokens.rule=Host(`auth.localhost`)"
+      - "traefik.http.routers.supertokens.entrypoints=web"
+      - "traefik.http.services.supertokens.loadbalancer.server.port=3567"
+      - "traefik.docker.network=supertokens_network"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3567/hello"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  traefik:
+    image: traefik:v2.10
+    container_name: soundcapsule-traefik
+    restart: unless-stopped
+    command:
+      - "--api.insecure=true"
+      - "--providers.docker=true"
+      - "--providers.docker.exposedbydefault=false"
+      - "--entrypoints.web.address=:80"
+      - "--log.level=INFO"
+    ports:
+      - "80:80"
+      - "8080:8080"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    networks:
+      - supertokens_network
+
+networks:
+  supertokens_network:
+    driver: bridge
+
+volumes:
+  mysql_data:
