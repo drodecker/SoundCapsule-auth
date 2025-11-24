@@ -32,7 +32,7 @@ Production-ready authentication service using SuperTokens with MySQL database an
 
 4. **Access the services**
    - SuperTokens Core: `http://localhost:4001` or `http://auth.localhost`
-   - Traefik Dashboard: `http://localhost:8080`
+   - Traefik Dashboard: Enable by adding `--api.insecure=true` for local development
 
 ## Configuration
 

@@ -12,7 +12,7 @@ port: 3567
 # api_keys: 
 
 # Disable telemetry in production
-disable_telemetry: false
+disable_telemetry: true
 
 # Access token validity (in seconds) - 1 hour
 access_token_validity: 3600
