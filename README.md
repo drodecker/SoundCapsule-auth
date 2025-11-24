@@ -251,10 +251,22 @@ const loadApplePrivateKey = () => {
         return null;
     }
     try {
-        return fs.readFileSync(keyPath, 'utf8');
+        // Check if file exists and is readable
+        fs.accessSync(keyPath, fs.constants.R_OK);
+        
+        // Read the key file
+        const key = fs.readFileSync(keyPath, 'utf8');
+        
+        // Basic validation - Apple keys should start with specific headers
+        if (!key.includes('BEGIN PRIVATE KEY')) {
+            throw new Error('Invalid Apple private key format');
+        }
+        
+        console.log(`Apple private key loaded successfully from ${keyPath}`);
+        return key;
     } catch (error) {
         console.error(`Failed to read Apple private key from ${keyPath}:`, error.message);
-        throw new Error(`Apple private key not found at ${keyPath}. Please check APPLE_PRIVATE_KEY_PATH`);
+        throw new Error(`Apple private key error at ${keyPath}: ${error.message}`);
     }
 };
 
