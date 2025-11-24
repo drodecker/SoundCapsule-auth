@@ -257,9 +257,9 @@ const loadApplePrivateKey = () => {
         // Read the key file
         const key = fs.readFileSync(keyPath, 'utf8');
         
-        // Basic validation - Apple keys should start with specific headers
-        if (!key.includes('BEGIN PRIVATE KEY')) {
-            throw new Error('Invalid Apple private key format');
+        // Basic validation - Apple keys should have PKCS#8 format header
+        if (!key.includes('-----BEGIN PRIVATE KEY-----')) {
+            throw new Error('Invalid Apple private key format - must be PKCS#8 format (.p8 file)');
         }
         
         console.log(`Apple private key loaded successfully from ${keyPath}`);
