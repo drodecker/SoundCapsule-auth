@@ -241,6 +241,24 @@ const Session = require("supertokens-node/recipe/session");
 const ThirdPartyEmailPassword = require("supertokens-node/recipe/thirdpartyemailpassword");
 const EmailVerification = require("supertokens-node/recipe/emailverification");
 const Passwordless = require("supertokens-node/recipe/passwordless");
+const fs = require('fs');
+
+// Load Apple private key at startup (one-time operation)
+const loadApplePrivateKey = () => {
+    const keyPath = process.env.APPLE_PRIVATE_KEY_PATH;
+    if (!keyPath) {
+        console.warn('Apple Sign In disabled: APPLE_PRIVATE_KEY_PATH not configured');
+        return null;
+    }
+    try {
+        return fs.readFileSync(keyPath, 'utf8');
+    } catch (error) {
+        console.error(`Failed to read Apple private key from ${keyPath}:`, error.message);
+        throw new Error(`Apple private key not found at ${keyPath}. Please check APPLE_PRIVATE_KEY_PATH`);
+    }
+};
+
+const applePrivateKey = loadApplePrivateKey();
 
 supertokens.init({
     framework: "express",
@@ -267,7 +285,7 @@ supertokens.init({
                         }],
                     },
                 },
-                {
+                ...(applePrivateKey ? [{
                     config: {
                         thirdPartyId: "apple",
                         clients: [{
@@ -275,19 +293,11 @@ supertokens.init({
                             additionalConfig: {
                                 keyId: process.env.APPLE_KEY_ID,
                                 teamId: process.env.APPLE_TEAM_ID,
-                                privateKey: (() => {
-                                    const keyPath = process.env.APPLE_PRIVATE_KEY_PATH;
-                                    try {
-                                        return require('fs').readFileSync(keyPath, 'utf8');
-                                    } catch (error) {
-                                        console.error(`Failed to read Apple private key from ${keyPath}:`, error.message);
-                                        throw new Error(`Apple private key not found at ${keyPath}. Please check APPLE_PRIVATE_KEY_PATH`);
-                                    }
-                                })(),
+                                privateKey: applePrivateKey,
                             },
                         }],
                     },
-                },
+                }] : []),
                 {
                     config: {
                         thirdPartyId: "facebook",
@@ -355,7 +365,7 @@ Health check endpoints:
 ### Database connection issues
 - Check if MySQL container is running: `docker-compose ps`
 - Verify MySQL is healthy: `docker-compose logs mysql`
-- Test connection: `docker-compose exec mysql mysql -u supertokens_user -p`
+- Test connection (replace username if different): `docker-compose exec mysql mysql -u supertokens_user -p`
 
 ## Development
 
