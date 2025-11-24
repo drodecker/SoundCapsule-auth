@@ -5,11 +5,8 @@ core_config_version: 0
 host: "0.0.0.0"
 port: 3567
 
-# MySQL connection - configured via environment variable
-# The MYSQL_CONNECTION_URI environment variable will be used for database connection
-
-# API Keys for security (configured via environment variable)
-# api_keys: 
+# MySQL connection - configured via environment variable MYSQL_CONNECTION_URI
+# API Keys - configured via environment variable API_KEYS
 
 # Disable telemetry in production
 disable_telemetry: true
