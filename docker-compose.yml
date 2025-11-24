@@ -1,0 +1,75 @@
+services:
+  mysql:
+    image: mysql:8.0
+    container_name: soundcapsule-mysql
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MYSQL_DATABASE: ${MYSQL_DATABASE}
+      MYSQL_USER: ${MYSQL_USER}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+    volumes:
+      - mysql_data:/var/lib/mysql
+    networks:
+      - supertokens_network
+    healthcheck:
+      test: ["CMD-SHELL", "MYSQL_PWD=$$MYSQL_PASSWORD mysqladmin ping -h localhost -u $$MYSQL_USER || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  supertokens:
+    image: registry.supertokens.io/supertokens/supertokens-mysql:10.1
+    container_name: soundcapsule-supertokens
+    restart: unless-stopped
+    depends_on:
+      mysql:
+        condition: service_healthy
+    ports:
+      - "4001:3567"
+    environment:
+      MYSQL_CONNECTION_URI: mysql://${MYSQL_USER}:${MYSQL_PASSWORD}@mysql:3306/${MYSQL_DATABASE}
+      API_KEYS: ${SUPERTOKENS_API_KEYS}
+      DISABLE_TELEMETRY: "true"
+      ACCESS_TOKEN_VALIDITY: "3600"
+      REFRESH_TOKEN_VALIDITY: "5184000"
+      PASSWORD_RESET_TOKEN_LIFETIME: "3600000"
+      EMAIL_VERIFICATION_TOKEN_LIFETIME: "86400000"
+      MYSQL_CONNECTION_POOL_SIZE: "10"
+      LOG_LEVEL: "INFO"
+    networks:
+      - supertokens_network
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.supertokens.rule=Host(`auth.localhost`)"
+      - "traefik.http.routers.supertokens.entrypoints=web"
+      - "traefik.http.services.supertokens.loadbalancer.server.port=3567"
+      - "traefik.docker.network=supertokens_network"
+    healthcheck:
+      test: ["CMD-SHELL", "timeout 5 bash -c '</dev/tcp/localhost/3567' || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  traefik:
+    image: traefik:v2.10
+    container_name: soundcapsule-traefik
+    restart: unless-stopped
+    command:
+      - "--providers.docker=true"
+      - "--providers.docker.exposedbydefault=false"
+      - "--entrypoints.web.address=:80"
+      - "--log.level=INFO"
+    ports:
+      - "80:80"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    networks:
+      - supertokens_network
+
+networks:
+  supertokens_network:
+    driver: bridge
+
+volumes:
+  mysql_data:
