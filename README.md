@@ -15,7 +15,7 @@ Production-ready authentication service using SuperTokens with MySQL database an
 
 1. **Clone the repository**
    ```bash
-   git clone https://github.com/drodecker/SoundCapsule-auth.git
+   git clone <your-repository-url>
    cd SoundCapsule-auth
    ```
 
@@ -32,7 +32,7 @@ Production-ready authentication service using SuperTokens with MySQL database an
 
 4. **Access the services**
    - SuperTokens Core: `http://localhost:4001` or `http://auth.localhost`
-   - Traefik Dashboard: Enable by adding `--api.insecure=true` for local development
+   - Traefik Dashboard: Disabled by default for security (can enable with `--api.insecure=true` for local dev)
 
 ## Configuration
 
@@ -273,7 +273,7 @@ supertokens.init({
                             additionalConfig: {
                                 keyId: process.env.APPLE_KEY_ID,
                                 teamId: process.env.APPLE_TEAM_ID,
-                                privateKey: process.env.APPLE_PRIVATE_KEY,
+                                privateKey: require('fs').readFileSync(process.env.APPLE_PRIVATE_KEY_PATH, 'utf8'),
                             },
                         }],
                     },
